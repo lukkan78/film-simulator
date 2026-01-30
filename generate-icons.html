@@ -4,82 +4,79 @@
     <title>Generate PWA Icons</title>
     <style>
         body { font-family: system-ui; padding: 20px; background: #1a1a1a; color: #fff; }
-        canvas { border: 1px solid #333; margin: 10px; }
+        canvas { border: 1px solid #333; margin: 10px; background: #000; }
         .icons { display: flex; flex-wrap: wrap; gap: 20px; }
         .icon-item { text-align: center; }
-        a { color: #e74c3c; }
+        a { color: #e74c3c; display: inline-block; margin-top: 5px; }
+        button { background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <h1>PWA Icon Generator</h1>
-    <p>Right-click each icon and "Save image as..." to the assets/icons folder.</p>
+    <h1>PWA Icon Generator - Film Reel</h1>
+    <p>Click "Download" under each icon to save it.</p>
     <div class="icons" id="icons"></div>
 
     <script>
-        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const sizes = [180, 192, 512];
 
-        function drawIcon(ctx, size) {
+        function drawFilmReel(ctx, size) {
             const s = size;
-            const radius = s * 0.1875; // Rounded corners
+            const cx = s / 2;
+            const cy = s / 2;
 
-            // Background gradient
+            // Background circle
             const gradient = ctx.createLinearGradient(0, 0, s, s);
-            gradient.addColorStop(0, '#2d2d2d');
+            gradient.addColorStop(0, '#2a2a2a');
             gradient.addColorStop(1, '#1a1a1a');
 
-            // Draw rounded rectangle background
             ctx.beginPath();
-            ctx.roundRect(0, 0, s, s, radius);
+            ctx.arc(cx, cy, s * 0.47, 0, Math.PI * 2);
             ctx.fillStyle = gradient;
             ctx.fill();
 
-            // Draw film perforations
-            ctx.fillStyle = '#e74c3c';
-            const perfWidth = s * 0.047;
-            const perfHeight = s * 0.078;
-            const perfRadius = s * 0.008;
-            const perfX = s * 0.078;
-            const perfSpacing = s * 0.156;
+            // Film reel outer ring
+            ctx.beginPath();
+            ctx.arc(cx, cy, s * 0.35, 0, Math.PI * 2);
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = s * 0.047;
+            ctx.stroke();
 
-            for (let i = 0; i < 5; i++) {
-                const y = s * 0.156 + i * perfSpacing;
-                // Left perforations
+            // Center hub
+            ctx.beginPath();
+            ctx.arc(cx, cy, s * 0.1, 0, Math.PI * 2);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, s * 0.05, 0, Math.PI * 2);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fill();
+
+            // Reel holes (6 holes in circle)
+            const holeRadius = s * 0.055;
+            const holeDistance = s * 0.21;
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * 60 - 90) * Math.PI / 180;
+                const hx = cx + Math.cos(angle) * holeDistance;
+                const hy = cy + Math.sin(angle) * holeDistance;
                 ctx.beginPath();
-                ctx.roundRect(perfX, y, perfWidth, perfHeight, perfRadius);
-                ctx.fill();
-                // Right perforations
-                ctx.beginPath();
-                ctx.roundRect(s - perfX - perfWidth, y, perfWidth, perfHeight, perfRadius);
+                ctx.arc(hx, hy, holeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#1a1a1a';
                 ctx.fill();
             }
 
-            // Draw film frame
-            ctx.fillStyle = '#3d3d3d';
-            ctx.beginPath();
-            ctx.roundRect(s * 0.172, s * 0.188, s * 0.656, s * 0.438, s * 0.016);
-            ctx.fill();
+            // Film perforations on sides
+            ctx.fillStyle = '#444';
+            const perfW = s * 0.03;
+            const perfH = s * 0.045;
+            const perfX1 = s * 0.12;
+            const perfX2 = s - s * 0.12 - perfW;
 
-            // Draw aperture circle
-            ctx.strokeStyle = '#e74c3c';
-            ctx.lineWidth = s * 0.02;
-            ctx.beginPath();
-            ctx.arc(s * 0.5, s * 0.406, s * 0.125, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.lineWidth = s * 0.015;
-            ctx.beginPath();
-            ctx.arc(s * 0.5, s * 0.406, s * 0.078, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Draw text
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `bold ${s * 0.125}px system-ui, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText('FILM', s * 0.5, s * 0.82);
-
-            ctx.fillStyle = '#a0a0a0';
-            ctx.font = `${s * 0.0625}px system-ui, sans-serif`;
-            ctx.fillText('SIMULATOR', s * 0.5, s * 0.92);
+            for (let i = 0; i < 5; i++) {
+                const y = s * 0.24 + i * s * 0.12;
+                ctx.fillRect(perfX1, y, perfW, perfH);
+                ctx.fillRect(perfX2, y, perfW, perfH);
+            }
         }
 
         const container = document.getElementById('icons');
@@ -93,13 +90,24 @@
             canvas.height = size;
             const ctx = canvas.getContext('2d');
 
-            drawIcon(ctx, size);
+            drawFilmReel(ctx, size);
 
             const label = document.createElement('p');
-            label.textContent = `icon-${size}.png`;
+            const filename = size === 180 ? 'apple-touch-icon.png' : `icon-${size}.png`;
+            label.textContent = filename;
+
+            const btn = document.createElement('button');
+            btn.textContent = 'Download';
+            btn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
 
             div.appendChild(canvas);
             div.appendChild(label);
+            div.appendChild(btn);
             container.appendChild(div);
         });
     </script>
