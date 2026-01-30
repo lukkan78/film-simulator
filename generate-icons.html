@@ -21,62 +21,70 @@
 
         function drawFilmReel(ctx, size) {
             const s = size;
-            const cx = s / 2;
-            const cy = s / 2;
+            const pad = s * 0.1;
 
-            // Background circle
-            const gradient = ctx.createLinearGradient(0, 0, s, s);
-            gradient.addColorStop(0, '#2a2a2a');
-            gradient.addColorStop(1, '#1a1a1a');
-
-            ctx.beginPath();
-            ctx.arc(cx, cy, s * 0.47, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-
-            // Film reel outer ring
-            ctx.beginPath();
-            ctx.arc(cx, cy, s * 0.35, 0, Math.PI * 2);
-            ctx.strokeStyle = '#e74c3c';
-            ctx.lineWidth = s * 0.047;
-            ctx.stroke();
-
-            // Center hub
-            ctx.beginPath();
-            ctx.arc(cx, cy, s * 0.1, 0, Math.PI * 2);
-            ctx.fillStyle = '#e74c3c';
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(cx, cy, s * 0.05, 0, Math.PI * 2);
+            // Background
             ctx.fillStyle = '#1a1a1a';
-            ctx.fill();
+            ctx.fillRect(0, 0, s, s);
 
-            // Reel holes (6 holes in circle)
-            const holeRadius = s * 0.055;
-            const holeDistance = s * 0.21;
-            for (let i = 0; i < 6; i++) {
-                const angle = (i * 60 - 90) * Math.PI / 180;
-                const hx = cx + Math.cos(angle) * holeDistance;
-                const hy = cy + Math.sin(angle) * holeDistance;
+            // Film strip
+            const stripX = s * 0.2;
+            const stripW = s * 0.6;
+
+            // Film base (dark brown/black)
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(stripX, 0, stripW, s);
+
+            // Perforations (left side)
+            const perfW = s * 0.06;
+            const perfH = s * 0.08;
+            const perfGap = s * 0.12;
+            const perfMargin = s * 0.04;
+
+            ctx.fillStyle = '#1a1a1a';
+            for (let i = 0; i < 7; i++) {
+                const y = s * 0.06 + i * perfGap;
+                // Left perforations
                 ctx.beginPath();
-                ctx.arc(hx, hy, holeRadius, 0, Math.PI * 2);
-                ctx.fillStyle = '#1a1a1a';
+                ctx.roundRect(stripX + perfMargin, y, perfW, perfH, s * 0.015);
+                ctx.fill();
+                // Right perforations
+                ctx.beginPath();
+                ctx.roundRect(stripX + stripW - perfMargin - perfW, y, perfW, perfH, s * 0.015);
                 ctx.fill();
             }
 
-            // Film perforations on sides
-            ctx.fillStyle = '#444';
-            const perfW = s * 0.03;
-            const perfH = s * 0.045;
-            const perfX1 = s * 0.12;
-            const perfX2 = s - s * 0.12 - perfW;
+            // Film frames (exposed areas)
+            const frameX = stripX + s * 0.14;
+            const frameW = stripW - s * 0.28;
+            const frameH = s * 0.22;
 
-            for (let i = 0; i < 5; i++) {
-                const y = s * 0.24 + i * s * 0.12;
-                ctx.fillRect(perfX1, y, perfW, perfH);
-                ctx.fillRect(perfX2, y, perfW, perfH);
-            }
+            // Frame 1 (top) - with gradient
+            const grad1 = ctx.createLinearGradient(frameX, s * 0.12, frameX + frameW, s * 0.12 + frameH);
+            grad1.addColorStop(0, '#e74c3c');
+            grad1.addColorStop(1, '#c0392b');
+            ctx.fillStyle = grad1;
+            ctx.beginPath();
+            ctx.roundRect(frameX, s * 0.12, frameW, frameH, s * 0.02);
+            ctx.fill();
+
+            // Frame 2 (middle) - lighter
+            const grad2 = ctx.createLinearGradient(frameX, s * 0.39, frameX + frameW, s * 0.39 + frameH);
+            grad2.addColorStop(0, '#f39c12');
+            grad2.addColorStop(1, '#d68910');
+            ctx.fillStyle = grad2;
+            ctx.beginPath();
+            ctx.roundRect(frameX, s * 0.39, frameW, frameH, s * 0.02);
+            ctx.fill();
+
+            // Frame 3 (bottom)
+            const grad3 = ctx.createLinearGradient(frameX, s * 0.66, frameX + frameW, s * 0.66 + frameH);
+            grad3.addColorStop(0, '#3498db');
+            grad3.addColorStop(1, '#2980b9');
+            ctx.fillStyle = grad3;
+            ctx.beginPath();
+            ctx.roundRect(frameX, s * 0.66, frameW, frameH, s * 0.02);
+            ctx.fill();
         }
 
         const container = document.getElementById('icons');
