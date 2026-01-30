@@ -175,7 +175,8 @@ body {
 
 .upload-credit .heart {
     color: var(--primary);
-    font-size: 1em;
+    font-size: 1.8em;
+    vertical-align: middle;
 }
 
 /* Editor Section - fixed layout */
