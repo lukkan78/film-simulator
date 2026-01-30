@@ -112,6 +112,9 @@ class FilmSimulatorApp {
         this.cropFrameHeight = 0;
         this.cropRotation = 0; // 0, 90, 180, 270 degrees
         this.cropOriginalCanvas = null; // Store original unrotated image
+        this.cropMoveMode = 'image'; // 'image' or 'frame'
+        this.cropFrameX = 0; // Frame offset from center
+        this.cropFrameY = 0;
 
         // Slider modal
         this.sliderModal = document.getElementById('sliderModal');
@@ -396,6 +399,9 @@ class FilmSimulatorApp {
         });
         document.getElementById('cropFlipRatio').addEventListener('click', () => {
             this.flipCropRatio();
+        });
+        document.getElementById('cropMoveToggle').addEventListener('click', () => {
+            this.toggleCropMoveMode();
         });
 
         this.cropRatios.querySelectorAll('.crop-ratio').forEach(btn => {
@@ -1162,6 +1168,14 @@ class FilmSimulatorApp {
         // Reset rotation
         this.cropRotation = 0;
 
+        // Reset frame position and move mode
+        this.cropFrameX = 0;
+        this.cropFrameY = 0;
+        this.cropMoveMode = 'image';
+        const moveBtn = document.getElementById('cropMoveToggle');
+        moveBtn.classList.remove('frame-mode');
+        moveBtn.querySelector('.crop-tool-label').textContent = 'Image';
+
         // Store original image dimensions
         this.cropImageWidth = imgData.width;
         this.cropImageHeight = imgData.height;
@@ -1210,6 +1224,9 @@ class FilmSimulatorApp {
 
         this.cropFrame.style.width = frameW + 'px';
         this.cropFrame.style.height = frameH + 'px';
+
+        // Apply frame position offset
+        this.cropFrame.style.transform = `translate(calc(-50% + ${this.cropFrameX}px), calc(-50% + ${this.cropFrameY}px))`;
 
         // Store frame dimensions
         this.cropFrameWidth = frameW;
@@ -1339,6 +1356,21 @@ class FilmSimulatorApp {
         }
     }
 
+    toggleCropMoveMode() {
+        const btn = document.getElementById('cropMoveToggle');
+        const label = btn.querySelector('.crop-tool-label');
+
+        if (this.cropMoveMode === 'image') {
+            this.cropMoveMode = 'frame';
+            btn.classList.add('frame-mode');
+            label.textContent = 'Frame';
+        } else {
+            this.cropMoveMode = 'image';
+            btn.classList.remove('frame-mode');
+            label.textContent = 'Image';
+        }
+    }
+
     updateCropImage() {
         const transform = `translate(-50%, -50%) scale(${this.cropImageScale}) translate(${this.cropImageX}px, ${this.cropImageY}px)`;
         this.cropCanvas.style.transform = transform;
@@ -1380,6 +1412,17 @@ class FilmSimulatorApp {
         }
     }
 
+    constrainFramePosition() {
+        // Keep frame within container bounds
+        const containerRect = this.cropContainer.getBoundingClientRect();
+        const padding = 20;
+        const maxX = (containerRect.width - this.cropFrameWidth) / 2 - padding;
+        const maxY = (containerRect.height - this.cropFrameHeight) / 2 - padding;
+
+        this.cropFrameX = Math.max(-maxX, Math.min(maxX, this.cropFrameX));
+        this.cropFrameY = Math.max(-maxY, Math.min(maxY, this.cropFrameY));
+    }
+
     resetCrop() {
         if (!this.originalBackup) return;
 
@@ -1414,6 +1457,7 @@ class FilmSimulatorApp {
         let isResizing = false;
         let resizeCorner = null;
         let startX, startY, startImageX, startImageY;
+        let startFrameOffsetX, startFrameOffsetY;
         let startPinchDist = 0;
         let startScale = 1;
         let startFrameW, startFrameH;
@@ -1465,6 +1509,8 @@ class FilmSimulatorApp {
                 startY = e.touches[0].clientY;
                 startImageX = this.cropImageX;
                 startImageY = this.cropImageY;
+                startFrameOffsetX = this.cropFrameX;
+                startFrameOffsetY = this.cropFrameY;
                 e.preventDefault();
             } else if (!e.touches) {
                 // Mouse drag
@@ -1473,6 +1519,8 @@ class FilmSimulatorApp {
                 startY = e.clientY;
                 startImageX = this.cropImageX;
                 startImageY = this.cropImageY;
+                startFrameOffsetX = this.cropFrameX;
+                startFrameOffsetY = this.cropFrameY;
             }
         };
 
@@ -1572,10 +1620,19 @@ class FilmSimulatorApp {
                 const dx = clientX - startX;
                 const dy = clientY - startY;
 
-                this.cropImageX = startImageX + dx / this.cropImageScale;
-                this.cropImageY = startImageY + dy / this.cropImageScale;
-                this.constrainImagePosition();
-                this.updateCropImage();
+                if (this.cropMoveMode === 'frame') {
+                    // Move the frame
+                    this.cropFrameX = startFrameOffsetX + dx;
+                    this.cropFrameY = startFrameOffsetY + dy;
+                    this.constrainFramePosition();
+                    this.updateCropFrame();
+                } else {
+                    // Move the image (default)
+                    this.cropImageX = startImageX + dx / this.cropImageScale;
+                    this.cropImageY = startImageY + dy / this.cropImageScale;
+                    this.constrainImagePosition();
+                    this.updateCropImage();
+                }
                 e.preventDefault();
             }
         };
@@ -1595,6 +1652,8 @@ class FilmSimulatorApp {
                 startY = e.touches[0].clientY;
                 startImageX = this.cropImageX;
                 startImageY = this.cropImageY;
+                startFrameOffsetX = this.cropFrameX;
+                startFrameOffsetY = this.cropFrameY;
             } else if (!e.touches || e.touches.length === 0) {
                 isDragging = false;
                 isPinching = false;
@@ -1619,9 +1678,13 @@ class FilmSimulatorApp {
         const frameWInImage = this.cropFrameWidth / this.cropImageScale;
         const frameHInImage = this.cropFrameHeight / this.cropImageScale;
 
-        // Calculate where the image center is relative to frame center
-        const centerX = sourceW / 2 - this.cropImageX;
-        const centerY = sourceH / 2 - this.cropImageY;
+        // Frame offset in image pixels
+        const frameOffsetX = this.cropFrameX / this.cropImageScale;
+        const frameOffsetY = this.cropFrameY / this.cropImageScale;
+
+        // Calculate where the image center is relative to frame center (including frame offset)
+        const centerX = sourceW / 2 - this.cropImageX + frameOffsetX;
+        const centerY = sourceH / 2 - this.cropImageY + frameOffsetY;
 
         // Calculate crop rectangle in source image coordinates
         const srcX = centerX - frameWInImage / 2;
