@@ -322,6 +322,7 @@ body.fullscreen-mode .canvas-container {
     inset: 0;
     border-radius: 0;
     background: #000;
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 body.fullscreen-mode .fullscreen-btn {
