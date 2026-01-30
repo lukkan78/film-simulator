@@ -1,6 +1,6 @@
 /**
  * Film Simulator App - Clean Mobile UI
- * Version 36 - True LUT preview
+ * Version 37 - Crop rotation and aspect ratio flip
  */
 
 class FilmSimulatorApp {
@@ -110,6 +110,8 @@ class FilmSimulatorApp {
         this.cropImageHeight = 0;
         this.cropFrameWidth = 0;
         this.cropFrameHeight = 0;
+        this.cropRotation = 0; // 0, 90, 180, 270 degrees
+        this.cropOriginalCanvas = null; // Store original unrotated image
 
         // Slider modal
         this.sliderModal = document.getElementById('sliderModal');
@@ -384,6 +386,18 @@ class FilmSimulatorApp {
         this.cropCancel.addEventListener('click', () => this.closeCropModal());
         this.cropApply.addEventListener('click', () => this.applyCrop());
         this.cropReset.addEventListener('click', () => this.resetCrop());
+
+        // Crop rotation and flip
+        document.getElementById('cropRotateLeft').addEventListener('click', () => {
+            this.rotateCropImage(-90);
+        });
+        document.getElementById('cropRotateRight').addEventListener('click', () => {
+            this.rotateCropImage(90);
+        });
+        document.getElementById('cropFlipRatio').addEventListener('click', () => {
+            this.flipCropRatio();
+        });
+
         this.cropRatios.querySelectorAll('.crop-ratio').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.cropRatios.querySelectorAll('.crop-ratio').forEach(b => b.classList.remove('active'));
@@ -1139,6 +1153,15 @@ class FilmSimulatorApp {
         tempCanvas.getContext('2d').putImageData(imgData, 0, 0);
         this.cropCtx.drawImage(tempCanvas, 0, 0);
 
+        // Store original unrotated canvas for rotation operations
+        this.cropOriginalCanvas = document.createElement('canvas');
+        this.cropOriginalCanvas.width = imgData.width;
+        this.cropOriginalCanvas.height = imgData.height;
+        this.cropOriginalCanvas.getContext('2d').putImageData(imgData, 0, 0);
+
+        // Reset rotation
+        this.cropRotation = 0;
+
         // Store original image dimensions
         this.cropImageWidth = imgData.width;
         this.cropImageHeight = imgData.height;
@@ -1210,6 +1233,112 @@ class FilmSimulatorApp {
         this.updateCropImage();
     }
 
+    rotateCropImage(degrees) {
+        // Update rotation (keep in 0, 90, 180, 270 range)
+        this.cropRotation = (this.cropRotation + degrees + 360) % 360;
+
+        // Get the original unrotated image
+        const origCanvas = this.cropOriginalCanvas;
+        const origW = origCanvas.width;
+        const origH = origCanvas.height;
+
+        // Create rotated version
+        const rotatedCanvas = document.createElement('canvas');
+        const rotatedCtx = rotatedCanvas.getContext('2d');
+
+        // Set dimensions based on rotation
+        if (this.cropRotation === 90 || this.cropRotation === 270) {
+            rotatedCanvas.width = origH;
+            rotatedCanvas.height = origW;
+        } else {
+            rotatedCanvas.width = origW;
+            rotatedCanvas.height = origH;
+        }
+
+        // Draw rotated image
+        rotatedCtx.save();
+        rotatedCtx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+        rotatedCtx.rotate(this.cropRotation * Math.PI / 180);
+        rotatedCtx.drawImage(origCanvas, -origW / 2, -origH / 2);
+        rotatedCtx.restore();
+
+        // Update crop canvas with rotated image
+        this.cropCanvas.width = rotatedCanvas.width;
+        this.cropCanvas.height = rotatedCanvas.height;
+        this.cropCtx.drawImage(rotatedCanvas, 0, 0);
+
+        // Update dimensions
+        this.cropImageWidth = rotatedCanvas.width;
+        this.cropImageHeight = rotatedCanvas.height;
+
+        // Reset position and fit to frame
+        this.cropImageX = 0;
+        this.cropImageY = 0;
+        this.updateCropFrame();
+        this.fitImageToFrame();
+    }
+
+    flipCropRatio() {
+        // Don't flip if free ratio or 1:1 (square)
+        if (this.currentCropRatio === null) return;
+        if (this.currentCropRatio === 1) return;
+
+        // Flip the ratio (3:2 becomes 2:3, etc.)
+        this.currentCropRatio = 1 / this.currentCropRatio;
+
+        // Update the active button visual
+        this.updateRatioButtonVisual();
+
+        // Update frame and fit image
+        this.updateCropFrame();
+        this.fitImageToFrame();
+    }
+
+    updateRatioButtonVisual() {
+        // Find which ratio matches the current one
+        const buttons = this.cropRatios.querySelectorAll('.crop-ratio');
+        let foundMatch = false;
+
+        buttons.forEach(btn => {
+            const ratio = btn.dataset.ratio;
+            if (ratio === 'free') {
+                btn.classList.toggle('active', this.currentCropRatio === null);
+            } else if (ratio === '1:1') {
+                btn.classList.toggle('active', this.currentCropRatio === 1);
+            } else {
+                const [w, h] = ratio.split(':').map(Number);
+                const btnRatio = w / h;
+                // Check if this button's ratio matches (or its inverse)
+                const isMatch = Math.abs(btnRatio - this.currentCropRatio) < 0.01 ||
+                               Math.abs((1/btnRatio) - this.currentCropRatio) < 0.01;
+                if (isMatch && !foundMatch) {
+                    btn.classList.add('active');
+                    foundMatch = true;
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+        });
+
+        // If no match found (flipped ratio), remove all active states
+        // The flip icon indicates the current orientation
+        if (!foundMatch && this.currentCropRatio !== null && this.currentCropRatio !== 1) {
+            buttons.forEach(btn => btn.classList.remove('active'));
+            // Re-add active to the closest matching ratio
+            buttons.forEach(btn => {
+                const ratio = btn.dataset.ratio;
+                if (ratio !== 'free' && ratio !== '1:1') {
+                    const [w, h] = ratio.split(':').map(Number);
+                    const btnRatio = w / h;
+                    const invRatio = h / w;
+                    if (Math.abs(invRatio - this.currentCropRatio) < 0.01) {
+                        btn.classList.add('active');
+                    }
+                }
+            });
+        }
+    }
+
     updateCropImage() {
         const transform = `translate(-50%, -50%) scale(${this.cropImageScale}) translate(${this.cropImageX}px, ${this.cropImageY}px)`;
         this.cropCanvas.style.transform = transform;
@@ -1269,6 +1398,9 @@ class FilmSimulatorApp {
 
         // Draw original for compare view
         this.originalCtx.putImageData(this.originalBackup.previewImageData, 0, 0);
+
+        // Reset rotation
+        this.cropRotation = 0;
 
         // Close crop modal and reprocess
         this.closeCropModal();
@@ -1478,26 +1610,22 @@ class FilmSimulatorApp {
     }
 
     applyCrop() {
-        const origData = this.processor.originalImageData;
+        // Use the rotated crop canvas as the source (already includes rotation)
+        const sourceCanvas = this.cropCanvas;
+        const sourceW = this.cropImageWidth;
+        const sourceH = this.cropImageHeight;
 
-        // Frame size in original image pixels
+        // Frame size in source image pixels
         const frameWInImage = this.cropFrameWidth / this.cropImageScale;
         const frameHInImage = this.cropFrameHeight / this.cropImageScale;
 
         // Calculate where the image center is relative to frame center
-        const centerX = this.cropImageWidth / 2 - this.cropImageX;
-        const centerY = this.cropImageHeight / 2 - this.cropImageY;
+        const centerX = sourceW / 2 - this.cropImageX;
+        const centerY = sourceH / 2 - this.cropImageY;
 
-        // Calculate crop rectangle in original image coordinates
+        // Calculate crop rectangle in source image coordinates
         const srcX = centerX - frameWInImage / 2;
         const srcY = centerY - frameHInImage / 2;
-
-        // Get the original image as a canvas
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = origData.width;
-        tempCanvas.height = origData.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.putImageData(origData, 0, 0);
 
         // Create output canvas at frame size (in image pixels)
         const outputW = Math.round(frameWInImage);
@@ -1512,12 +1640,12 @@ class FilmSimulatorApp {
         croppedCtx.fillRect(0, 0, outputW, outputH);
 
         // Draw the image portion that's visible in the frame
-        // Source: area of original image to copy
+        // Source: area of rotated image to copy
         // Dest: where to place it on the output canvas
         const srcLeft = Math.max(0, srcX);
         const srcTop = Math.max(0, srcY);
-        const srcRight = Math.min(origData.width, srcX + frameWInImage);
-        const srcBottom = Math.min(origData.height, srcY + frameHInImage);
+        const srcRight = Math.min(sourceW, srcX + frameWInImage);
+        const srcBottom = Math.min(sourceH, srcY + frameHInImage);
 
         const destLeft = srcLeft - srcX;
         const destTop = srcTop - srcY;
@@ -1527,7 +1655,7 @@ class FilmSimulatorApp {
 
         if (copyW > 0 && copyH > 0) {
             croppedCtx.drawImage(
-                tempCanvas,
+                sourceCanvas,
                 srcLeft, srcTop, copyW, copyH,
                 destLeft, destTop, copyW, copyH
             );

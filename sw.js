@@ -3,7 +3,7 @@
  * Handles caching for offline support
  */
 
-const CACHE_NAME = 'film-simulator-v52';
+const CACHE_NAME = 'film-simulator-v60';
 const LUT_CACHE_NAME = 'film-simulator-luts-v1';
 
 // Core app files to cache immediately
