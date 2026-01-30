@@ -319,10 +319,13 @@ body.fullscreen-mode .editor-section {
 
 body.fullscreen-mode .canvas-container {
     position: fixed;
-    inset: 0;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: 0;
     background: #000;
-    padding-top: env(safe-area-inset-top, 0px);
+    height: auto;
 }
 
 body.fullscreen-mode .fullscreen-btn {
