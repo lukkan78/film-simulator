@@ -1187,7 +1187,10 @@ body.fullscreen-mode .compare-hint {
 .format-option input { display: none; }
 
 .format-label {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     padding: 10px 8px;
     text-align: center;
     background: var(--surface-2);
@@ -1196,6 +1199,14 @@ body.fullscreen-mode .compare-hint {
     font-weight: 500;
     font-size: 0.85rem;
     transition: all 0.2s;
+}
+
+.format-label small {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .format-option input:checked + .format-label {
