@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #1a1a1a; color: #fff; }
+        canvas { border: 1px solid #333; margin: 10px; }
+        .icons { display: flex; flex-wrap: wrap; gap: 20px; }
+        .icon-item { text-align: center; }
+        a { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Right-click each icon and "Save image as..." to the assets/icons folder.</p>
+    <div class="icons" id="icons"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        function drawIcon(ctx, size) {
+            const s = size;
+            const radius = s * 0.1875; // Rounded corners
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, s, s);
+            gradient.addColorStop(0, '#2d2d2d');
+            gradient.addColorStop(1, '#1a1a1a');
+
+            // Draw rounded rectangle background
+            ctx.beginPath();
+            ctx.roundRect(0, 0, s, s, radius);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw film perforations
+            ctx.fillStyle = '#e74c3c';
+            const perfWidth = s * 0.047;
+            const perfHeight = s * 0.078;
+            const perfRadius = s * 0.008;
+            const perfX = s * 0.078;
+            const perfSpacing = s * 0.156;
+
+            for (let i = 0; i < 5; i++) {
+                const y = s * 0.156 + i * perfSpacing;
+                // Left perforations
+                ctx.beginPath();
+                ctx.roundRect(perfX, y, perfWidth, perfHeight, perfRadius);
+                ctx.fill();
+                // Right perforations
+                ctx.beginPath();
+                ctx.roundRect(s - perfX - perfWidth, y, perfWidth, perfHeight, perfRadius);
+                ctx.fill();
+            }
+
+            // Draw film frame
+            ctx.fillStyle = '#3d3d3d';
+            ctx.beginPath();
+            ctx.roundRect(s * 0.172, s * 0.188, s * 0.656, s * 0.438, s * 0.016);
+            ctx.fill();
+
+            // Draw aperture circle
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = s * 0.02;
+            ctx.beginPath();
+            ctx.arc(s * 0.5, s * 0.406, s * 0.125, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.lineWidth = s * 0.015;
+            ctx.beginPath();
+            ctx.arc(s * 0.5, s * 0.406, s * 0.078, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${s * 0.125}px system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('FILM', s * 0.5, s * 0.82);
+
+            ctx.fillStyle = '#a0a0a0';
+            ctx.font = `${s * 0.0625}px system-ui, sans-serif`;
+            ctx.fillText('SIMULATOR', s * 0.5, s * 0.92);
+        }
+
+        const container = document.getElementById('icons');
+
+        sizes.forEach(size => {
+            const div = document.createElement('div');
+            div.className = 'icon-item';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            drawIcon(ctx, size);
+
+            const label = document.createElement('p');
+            label.textContent = `icon-${size}.png`;
+
+            div.appendChild(canvas);
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+    </script>
+</body>
+</html>

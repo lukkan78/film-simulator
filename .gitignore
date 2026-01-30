@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Build
+target/
+node_modules/
+
+# Source (keep only static files for GitHub Pages)
+src/
+pom.xml
+create-icons.js

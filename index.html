@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Film Simulator</title>
+    <meta name="description" content="Analog 35mm film emulation for your digital photos">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FilmSim">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+    <link rel="apple-touch-icon" href="/assets/icons/icon.svg">
+    <link rel="stylesheet" href="css/style.css?v=49">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header" id="appHeader" hidden>
+            <h1>Film Simulator</h1>
+            <p class="subtitle">Analog film emulation</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Upload -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-content">
+                    <div class="upload-branding">
+                        <h1 class="upload-title">Film Simulator</h1>
+                        <p class="upload-tagline">Analog film emulation for digital photos</p>
+                    </div>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" width="28" height="28">
+                                <path fill="currentColor" d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                            </svg>
+                        </div>
+                        <span class="upload-text">Choose Photo</span>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                    <p class="upload-hint">or drag and drop</p>
+                </div>
+                <footer class="upload-footer">
+                    <p class="upload-credit">Made with <span class="heart">♥</span> by Lukas Carnerheim<br>&copy; 2026</p>
+                </footer>
+            </section>
+
+            <!-- Editor -->
+            <section class="editor-section" id="editorSection" hidden>
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="previewCanvas"></canvas>
+                    <div class="compare-hint" id="compareHint">Tap to compare</div>
+                    <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        </svg>
+                    </button>
+                    <button class="fullscreen-exit-btn" id="fullscreenExitBtn" hidden title="Exit fullscreen">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                        </svg>
+                    </button>
+                    <div class="loading-overlay" id="loadingOverlay" hidden>
+                        <div class="spinner"></div>
+                        <p id="loadingText">Processing...</p>
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <div class="panel-handle"></div>
+
+                    <!-- Selected Film -->
+                    <div class="selected-film" id="selectedFilm">
+                        <div class="selected-film-info">
+                            <div class="selected-film-name" id="selectedFilmName">Kodak Portra 160</div>
+                            <div class="selected-film-desc" id="selectedFilmDesc">Neutral color, fine grain</div>
+                        </div>
+                        <span class="selected-film-arrow">›</span>
+                    </div>
+
+                    <!-- Adjustments (collapsible) -->
+                    <div class="adjustments-section">
+                        <button class="adjustments-toggle" id="adjustmentsToggle">
+                            <span>Adjustments</span>
+                            <span class="toggle-icon">+</span>
+                        </button>
+                        <div class="adjustments collapsed" id="adjustments">
+                            <div class="adjustments-inner">
+                                <div class="adjustment-chip">
+                                    <label>Strength</label>
+                                    <input type="range" id="strengthSlider" min="0" max="100" value="100">
+                                    <span class="value" id="strengthValue">100%</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Grain</label>
+                                    <input type="range" id="grainSlider" min="0" max="100" value="50">
+                                    <span class="value" id="grainValue">50%</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Bright</label>
+                                    <input type="range" id="brightnessSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="brightnessValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Contrast</label>
+                                    <input type="range" id="contrastSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="contrastValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Saturation</label>
+                                    <input type="range" id="saturationSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="saturationValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Temp</label>
+                                    <input type="range" id="temperatureSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="temperatureValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Vignette</label>
+                                    <input type="range" id="vignetteSlider" min="0" max="100" value="0">
+                                    <span class="value" id="vignetteValue">0%</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Fade</label>
+                                    <input type="range" id="fadeSlider" min="0" max="50" value="0">
+                                    <span class="value" id="fadeValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Shadows</label>
+                                    <input type="range" id="shadowsSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="shadowsValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Highlights</label>
+                                    <input type="range" id="highlightsSlider" min="-50" max="50" value="0">
+                                    <span class="value" id="highlightsValue">0</span>
+                                </div>
+                                <div class="adjustment-chip">
+                                    <label>Blacks</label>
+                                    <input type="range" id="blacksSlider" min="0" max="100" value="0">
+                                    <span class="value" id="blacksValue">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" id="cropBtn">Crop</button>
+                        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                        <button class="btn btn-primary" id="downloadBtn">Save</button>
+                    </div>
+                    <button class="btn btn-text" id="newImageBtn">Choose Another Photo</button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>LUTs by <a href="https://github.com/YahiaAngelo/Film-Luts" target="_blank">G'MIC</a> · v37</p>
+        </footer>
+
+        <!-- Film Selector Modal -->
+        <div class="film-modal" id="filmModal" hidden>
+            <div class="film-modal-inner">
+                <div class="film-modal-header">
+                    <h2>Select Film</h2>
+                    <button class="film-modal-close" id="filmModalClose">×</button>
+                </div>
+                <div class="film-preview-large" id="filmPreviewLarge">
+                    <canvas id="filmPreviewCanvas"></canvas>
+                    <div class="film-preview-label" id="filmPreviewLabel">Kodak Portra 160</div>
+                </div>
+                <div class="film-tabs" id="filmTabs">
+                    <button class="film-tab active" data-category="color">Color</button>
+                    <button class="film-tab" data-category="slide">Slide</button>
+                    <button class="film-tab" data-category="bw">B&W</button>
+                    <button class="film-tab" data-category="instant">Instant</button>
+                </div>
+                <div class="film-list" id="filmList"></div>
+                <div class="film-modal-footer">
+                    <button class="btn btn-primary" id="filmSelectBtn">Use This Film</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slider Modal -->
+        <div class="slider-modal" id="sliderModal" hidden>
+            <div class="slider-modal-content">
+                <div class="slider-modal-header">
+                    <span class="slider-modal-label" id="sliderModalLabel">Contrast</span>
+                    <span class="slider-modal-value" id="sliderModalValue">0</span>
+                </div>
+                <input type="range" class="slider-modal-input" id="sliderModalInput">
+                <button class="slider-modal-done" id="sliderModalDone">Done</button>
+            </div>
+        </div>
+
+        <!-- Save Image Modal (for iOS) -->
+        <div class="save-modal" id="saveModal" hidden>
+            <div class="save-modal-header">
+                <span>Hold image to save</span>
+                <button class="save-modal-close" id="saveModalClose">Done</button>
+            </div>
+            <div class="save-modal-image">
+                <img id="saveModalImg" src="" alt="Processed photo">
+            </div>
+        </div>
+
+        <!-- Crop Modal -->
+        <div class="crop-modal" id="cropModal" hidden>
+            <div class="crop-header">
+                <button class="crop-cancel" id="cropCancel">Cancel</button>
+                <span class="crop-title">Crop</span>
+                <button class="crop-reset" id="cropReset">Reset</button>
+                <button class="crop-apply" id="cropApply">Apply</button>
+            </div>
+            <div class="crop-container" id="cropContainer">
+                <canvas id="cropCanvas"></canvas>
+                <div class="crop-overlay" id="cropOverlay">
+                    <div class="crop-frame" id="cropFrame">
+                        <div class="crop-frame-grid"></div>
+                        <div class="crop-frame-corner tl"></div>
+                        <div class="crop-frame-corner tr"></div>
+                        <div class="crop-frame-corner bl"></div>
+                        <div class="crop-frame-corner br"></div>
+                    </div>
+                </div>
+                <div class="crop-zoom-indicator" id="cropZoomIndicator">1.0x</div>
+            </div>
+            <div class="crop-ratios" id="cropRatios">
+                <button class="crop-ratio active" data-ratio="3:2">3:2<span>35mm</span></button>
+                <button class="crop-ratio" data-ratio="4:3">4:3<span>Classic</span></button>
+                <button class="crop-ratio" data-ratio="1:1">1:1<span>Square</span></button>
+                <button class="crop-ratio" data-ratio="16:9">16:9<span>Wide</span></button>
+                <button class="crop-ratio" data-ratio="65:24">65:24<span>XPan</span></button>
+                <button class="crop-ratio" data-ratio="free">Free<span>Custom</span></button>
+            </div>
+        </div>
+
+        <!-- Download Modal -->
+        <div class="modal-overlay" id="downloadModal" hidden>
+            <div class="modal">
+                <h2>Save Photo</h2>
+                <div class="modal-content">
+                    <div class="export-info" id="exportInfo">
+                        <span class="export-dimensions" id="exportDimensions">--</span>
+                        <span class="export-size" id="exportSize"></span>
+                    </div>
+                    <div class="format-selector">
+                        <label class="format-option">
+                            <input type="radio" name="format" value="jpeg" checked>
+                            <span class="format-label">JPEG</span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="format" value="webp">
+                            <span class="format-label">WebP</span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="format" value="png">
+                            <span class="format-label">PNG</span>
+                        </label>
+                    </div>
+                    <div class="quality-control" id="qualityControl">
+                        <label>Quality: <span id="qualityValue">100%</span></label>
+                        <input type="range" id="qualitySlider" min="80" max="100" value="100">
+                    </div>
+                    <div class="resolution-control">
+                        <label class="resolution-option">
+                            <input type="checkbox" id="fullResolution" checked>
+                            <span>Full original resolution</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelDownload">Cancel</button>
+                    <button class="btn btn-primary" id="confirmDownload">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/filmProfiles.js?v=37"></script>
+    <script src="js/grainGenerator.js?v=37"></script>
+    <script src="js/lutParser.js?v=37"></script>
+    <script src="js/imageProcessor.js?v=37"></script>
+    <script src="js/imageWorker.js?v=37"></script>
+    <script src="js/app.js?v=47"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
