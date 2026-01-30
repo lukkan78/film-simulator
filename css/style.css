@@ -185,6 +185,7 @@ body {
     display: flex;
     flex-direction: column;
     background: var(--bg);
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Canvas Container - fixed at top */
