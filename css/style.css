@@ -86,7 +86,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 40px 24px;
-    background: var(--bg);
+    background: linear-gradient(135deg, #0a0a0a 0%, #0d1a2d 50%, #0a0a0a 100%);
     overflow: hidden;
 }
 
