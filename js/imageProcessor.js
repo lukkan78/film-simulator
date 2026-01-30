@@ -11,8 +11,8 @@ class ImageProcessor {
         this.workingCanvas = document.createElement('canvas');
         this.workingCtx = this.workingCanvas.getContext('2d', { willReadFrequently: true });
 
-        // Web Worker for processing
-        this.worker = new Worker('/js/imageWorker.js');
+        // Web Worker for processing (use relative path for GitHub Pages compatibility)
+        this.worker = new Worker('js/imageWorker.js');
         this.workerReady = true;
         this.pendingResolve = null;
 
