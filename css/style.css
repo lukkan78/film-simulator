@@ -24,8 +24,17 @@
 html {
     font-size: 16px;
     overflow-x: hidden;
-    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but allow scrolling */
+html, body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 body {
@@ -68,16 +77,17 @@ body {
     flex-direction: column;
 }
 
-/* Upload Section */
+/* Upload Section - fixed, no scroll */
 .upload-section {
-    flex: 1;
+    position: fixed;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 40px 24px;
-    min-height: 100vh;
-    min-height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
 }
 
 .upload-content {
@@ -168,21 +178,23 @@ body {
     font-size: 1em;
 }
 
-/* Editor Section */
+/* Editor Section - fixed layout */
 .editor-section {
+    position: fixed;
+    inset: 0;
     display: flex;
     flex-direction: column;
+    background: var(--bg);
 }
 
-/* Canvas Container - sticky at top while scrolling */
+/* Canvas Container - fixed at top */
 .canvas-container {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    flex-shrink: 0;
+    height: 45vh;
+    position: relative;
     background: var(--bg);
     overflow: hidden;
     cursor: pointer;
-    height: 50vh;
 }
 
 #previewCanvas,
@@ -345,13 +357,26 @@ body.fullscreen-mode .compare-hint {
 
 .loading-overlay p { font-size: 0.85rem; color: var(--text-dim); }
 
-/* Bottom Panel */
+/* Bottom Panel - scrollable */
 .controls-panel {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 16px;
     padding: 20px 16px;
     padding-bottom: calc(32px + var(--safe-bottom));
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar in controls panel too */
+.controls-panel::-webkit-scrollbar {
+    display: none;
+}
+.controls-panel {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 /* Panel Handle - hidden on scroll layout */
