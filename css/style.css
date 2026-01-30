@@ -174,13 +174,15 @@ body {
     flex-direction: column;
 }
 
-/* Canvas Container - fills available space */
+/* Canvas Container - sticky at top while scrolling */
 .canvas-container {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 10;
     background: var(--bg);
     overflow: hidden;
     cursor: pointer;
-    min-height: 50vh;
+    height: 50vh;
 }
 
 #previewCanvas,
